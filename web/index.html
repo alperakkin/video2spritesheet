@@ -542,11 +542,11 @@
         </div>
       </div>
 
-      <div class="spritesheet-editor-section hidden" id="spritesheetEditorSection">
+      <section class="spritesheet-editor-section hidden component component--spritesheet-editor" id="spritesheetEditorSection" data-component="spritesheet-editor">
         <h3>🛠 Spritesheet Editor</h3>
         <p class="editor-subtitle">Set sprite size and click tiles to remove frames.</p>
 
-        <div class="editor-controls">
+        <div class="editor-controls" data-layer="controls">
           <div class="control-group">
             <label for="spriteWidth">Sprite Width (px)</label>
             <input type="number" id="spriteWidth" value="64" min="1">
@@ -563,15 +563,15 @@
           </div>
         </div>
 
-        <div class="editor-canvas-wrapper">
+        <div class="editor-canvas-wrapper" data-layer="workspace">
           <canvas id="sheetEditorCanvas"></canvas>
         </div>
 
-        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <div class="editor-actions" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;" data-layer="actions">
           <button type="button" id="resetEditor" class="btn" style="max-width: 220px;">Reset Selection</button>
           <a id="sheetEditedDownload" class="download-btn hidden" download="spritesheet-edited.png">⬇️ Download Edited Spritesheet</a>
         </div>
-      </div>
+      </section>
     </div>
   </div>
 
