@@ -45,7 +45,7 @@ func Chroma(framesDir, chromaColor string, threshold, similarity float64) error 
 		thresholdStr = "0.15" // Default blend amount
 	}
 
-	filter := fmt.Sprintf("chromakey=%s:%s:%s", ffmpegColor, similarityStr, thresholdStr)
+	filter := fmt.Sprintf("chromakey=%s:%s:%s,format=rgba", ffmpegColor, similarityStr, thresholdStr)
 
 	for _, entry := range entries {
 		if entry.IsDir() {

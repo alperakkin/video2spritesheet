@@ -404,6 +404,44 @@
       display: block;
     }
 
+    .spritesheet-editor-section {
+      margin-top: 40px;
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 25px;
+    }
+
+    .spritesheet-editor-section h3 {
+      margin-bottom: 8px;
+    }
+
+    .editor-subtitle {
+      font-size: 0.9em;
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    .editor-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .editor-canvas-wrapper {
+      max-height: 480px;
+      overflow: auto;
+      border-radius: 12px;
+      border: 1px solid #e0e0e0;
+      background: #111;
+      padding: 10px;
+    }
+
+    #sheetEditorCanvas {
+      display: block;
+      max-width: 100%;
+    }
+
     @media (max-width: 768px) {
       .header h1 {
         font-size: 2em;
@@ -458,6 +496,12 @@
           </div>
 
           <div class="control-group">
+            <label for="fps">FPS</label>
+            <input type="range" id="fps" min="12" max="60" step="1" value="12">
+            <div class="value-display" id="fpsValue">12</div>
+          </div>
+
+          <div class="control-group">
             <label for="chromaColor" class="color-picker-label-text">🎨 Chroma Key Color</label>
             <div class="color-picker-wrapper">
               <input type="color" id="chromaColor" class="color-picker-input" value="#00ff00">
@@ -495,6 +539,37 @@
           <img id="sheet" class="hidden" alt="Spritesheet" style="max-width: 100%; height: auto;">
           <div id="sheetPlaceholder" style="padding: 40px; color: #666; font-style: italic;">Waiting for processing...</div>
           <a id="sheetDownload" class="download-btn hidden" download>⬇️ Download PNG</a>
+        </div>
+      </div>
+
+      <div class="spritesheet-editor-section hidden" id="spritesheetEditorSection">
+        <h3>🛠 Spritesheet Editor</h3>
+        <p class="editor-subtitle">Set sprite size and click tiles to remove frames.</p>
+
+        <div class="editor-controls">
+          <div class="control-group">
+            <label for="spriteWidth">Sprite Width (px)</label>
+            <input type="number" id="spriteWidth" value="64" min="1">
+          </div>
+
+          <div class="control-group">
+            <label for="spriteHeight">Sprite Height (px)</label>
+            <input type="number" id="spriteHeight" value="64" min="1">
+          </div>
+
+          <div class="control-group">
+            <label>Selection</label>
+            <div class="value-display" id="removedCount">Removed: 0</div>
+          </div>
+        </div>
+
+        <div class="editor-canvas-wrapper">
+          <canvas id="sheetEditorCanvas"></canvas>
+        </div>
+
+        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <button type="button" id="resetEditor" class="btn" style="max-width: 220px;">Reset Selection</button>
+          <a id="sheetEditedDownload" class="download-btn hidden" download="spritesheet-edited.png">⬇️ Download Edited Spritesheet</a>
         </div>
       </div>
     </div>

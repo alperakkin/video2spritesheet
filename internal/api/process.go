@@ -17,6 +17,7 @@ type ProcessRequest struct {
 	Similarity  float64 `json:"similarity"`
 	Tile        string  `json:"tile"`
 	ChromaColor string  `json:"chroma_color"`
+	FPS         int     `json:"fps"`
 }
 
 func ProcessHandler(w http.ResponseWriter, r *http.Request) {
@@ -36,6 +37,7 @@ func ProcessHandler(w http.ResponseWriter, r *http.Request) {
 	job.InitStatus()
 
 	framesDir := filepath.Join(job.Dir, "frames")
+	cleanDir := filepath.Join(job.Dir, "clean")
 	gifOut := filepath.Join(job.Dir, "final.gif")
 	spriteOut := filepath.Join(job.Dir, "spritesheet.png")
 
@@ -49,7 +51,7 @@ func ProcessHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Extract frames
 	job.UpdateStep("extract_frames", "running")
-	if err := ffmpeg.ExtractFrames(job.InputPath, framesDir); err != nil {
+	if err := ffmpeg.ExtractFrames(job.InputPath, framesDir, req.FPS); err != nil {
 		log.Printf("Error extracting frames: %v", err)
 		job.UpdateStep("extract_frames", "error")
 		http.Error(w, "Failed to extract frames", http.StatusInternalServerError)
@@ -71,9 +73,20 @@ func ProcessHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	job.UpdateStep("chroma", "done")
 
-	// 3. GIF
+	// 3. EROSION
+	job.UpdateStep("erosion", "running")
+	if err := ffmpeg.Erosion(framesDir, cleanDir); err != nil {
+		log.Printf("Error processin Erosion: %v", err)
+		job.UpdateStep("erosion", "error")
+		http.Error(w, "Failed to process erosion", http.StatusInternalServerError)
+		return
+
+	}
+	job.UpdateStep("erosion", "done")
+
+	// 4. GIF
 	job.UpdateStep("gif", "running")
-	if err := ffmpeg.MakeGIF(framesDir, gifOut); err != nil {
+	if err := ffmpeg.MakeGIF(cleanDir, gifOut, req.FPS, chromaColor, req.Threshold, req.Similarity); err != nil {
 		log.Printf("Error creating GIF: %v", err)
 		job.UpdateStep("gif", "error")
 		http.Error(w, "Failed to create GIF", http.StatusInternalServerError)
@@ -83,7 +96,7 @@ func ProcessHandler(w http.ResponseWriter, r *http.Request) {
 	// Set output path for web access
 	job.SetOutput("gif", "/outputs/"+job.ID+"/final.gif")
 
-	// 4. Spritesheet
+	// 5. Spritesheet
 	job.UpdateStep("spritesheet", "running")
 	tile := req.Tile
 	if tile == "" {

@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -24,6 +25,7 @@ func (j *Job) InitStatus() {
 		Steps: []Step{
 			{"extract_frames", "pending"},
 			{"chroma", "pending"},
+			{"erosion", "pending"},
 			{"gif", "pending"},
 			{"spritesheet", "pending"},
 		},
@@ -47,6 +49,7 @@ func (j *Job) UpdateStep(name, status string) {
 	}
 
 	j.writeStatus()
+	log.Printf("Step: %s Status: %s", name, status)
 }
 
 func (j *Job) SetOutput(key, value string) {
