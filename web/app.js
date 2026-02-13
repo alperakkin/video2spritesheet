@@ -16,15 +16,7 @@ if (chromaColorInput) {
     });
 }
 
-const spritesheetEditor = new SpritesheetSelectionEditor({
-    section: document.getElementById("spritesheetEditorSection"),
-    canvas: document.getElementById("sheetEditorCanvas"),
-    spriteWidthInput: document.getElementById("spriteWidth"),
-    spriteHeightInput: document.getElementById("spriteHeight"),
-    resetButton: document.getElementById("resetEditor"),
-    removedCount: document.getElementById("removedCount"),
-    downloadLink: document.getElementById("sheetEditedDownload")
-});
+
 
 // File upload handler
 document.getElementById("upload").addEventListener("change", async (e) => {
@@ -248,6 +240,15 @@ function updateResults(status) {
     }
 
     if (status.outputs.spritesheet) {
+        const spritesheetEditor = new SpritesheetSelectionEditor({
+            section: document.getElementById("spritesheetEditorSection"),
+            canvas: document.getElementById("sheetEditorCanvas"),
+            spriteWidthInput: document.getElementById("spriteWidth"),
+            spriteHeightInput: document.getElementById("spriteHeight"),
+            resetButton: document.getElementById("resetEditor"),
+            removedCount: document.getElementById("removedCount"),
+            downloadLink: document.getElementById("sheetEditedDownload")
+        });
         updateImageCard({
             imageEl: document.getElementById("sheet"),
             downloadEl: document.getElementById("sheetDownload"),
