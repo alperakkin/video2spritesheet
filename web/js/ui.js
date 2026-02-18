@@ -1,0 +1,201 @@
+
+import API from "./api.js"
+import { SpritesheetSelectionEditor } from "./editor.js";
+
+const api = new API();
+
+function bindRangeDisplay(inputId, outputId) {
+    const input = document.getElementById(inputId);
+    const output = document.getElementById(outputId);
+    if (!input || !output) return;
+
+    input.addEventListener("input", (e) => {
+        output.textContent = e.target.value;
+    });
+}
+
+
+export function updateResults(status) {
+    if (!status.outputs) return;
+
+    if (status.outputs.gif) {
+        updateImageCard({
+            imageEl: document.getElementById("gif"),
+            downloadEl: document.getElementById("gifDownload"),
+            placeholderEl: document.getElementById("gifPlaceholder"),
+            outputPath: status.outputs.gif,
+            loadErrorText: "Failed to load GIF. Retrying..."
+        });
+    }
+
+    if (status.outputs.spritesheet) {
+        const spritesheetEditor = new SpritesheetSelectionEditor({
+            section: document.getElementById("spritesheetEditorSection"),
+            canvas: document.getElementById("sheetEditorCanvas"),
+            spriteWidthInput: document.getElementById("spriteWidth"),
+            spriteHeightInput: document.getElementById("spriteHeight"),
+            resetButton: document.getElementById("resetEditor"),
+            removedCount: document.getElementById("removedCount"),
+            downloadLink: document.getElementById("sheetEditedDownload")
+        });
+        updateImageCard({
+            imageEl: document.getElementById("sheet"),
+            downloadEl: document.getElementById("sheetDownload"),
+            placeholderEl: document.getElementById("sheetPlaceholder"),
+            outputPath: status.outputs.spritesheet,
+            loadErrorText: "Failed to load spritesheet. Retrying...",
+            onLoaded: (cleanUrl) => spritesheetEditor.load(cleanUrl)
+        });
+    }
+}
+
+function updateImageCard({ imageEl, downloadEl, placeholderEl, outputPath, loadErrorText, onLoaded }) {
+    let url = outputPath.startsWith("/") ? outputPath : `/${outputPath}`;
+    const cleanUrl = url;
+    url += (url.includes("?") ? "&" : "?") + "t=" + Date.now();
+
+    const fullUrl = window.location.origin + url;
+    if (imageEl.src !== fullUrl && !imageEl.src.includes(cleanUrl)) {
+        imageEl.onload = () => {
+            imageEl.classList.remove("hidden");
+            downloadEl.href = cleanUrl;
+            downloadEl.classList.remove("hidden");
+            placeholderEl.style.display = "none";
+            if (onLoaded) onLoaded(cleanUrl);
+        };
+        imageEl.onerror = () => {
+            placeholderEl.textContent = loadErrorText;
+            placeholderEl.style.display = "block";
+        };
+        imageEl.src = url;
+        return;
+    }
+
+    if (imageEl.complete && imageEl.naturalHeight !== 0) {
+        imageEl.classList.remove("hidden");
+        downloadEl.href = cleanUrl;
+        downloadEl.classList.remove("hidden");
+        placeholderEl.style.display = "none";
+        if (onLoaded) onLoaded(cleanUrl);
+    }
+}
+
+
+function resetResultCards() {
+    document.getElementById("gif").classList.add("hidden");
+    document.getElementById("sheet").classList.add("hidden");
+    document.getElementById("gifDownload").classList.add("hidden");
+    document.getElementById("sheetDownload").classList.add("hidden");
+    document.getElementById("gifPlaceholder").textContent = "Processing...";
+    document.getElementById("gifPlaceholder").style.display = "block";
+    document.getElementById("sheetPlaceholder").textContent = "Processing...";
+    document.getElementById("sheetPlaceholder").style.display = "block";
+}
+
+function formatStepName(name) {
+    return name
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+}
+
+export function updateProgress(status) {
+    const progressSteps = document.getElementById("progressSteps");
+    progressSteps.innerHTML = "";
+
+    if (!status.steps || status.steps.length === 0) return;
+
+    status.steps.forEach((step) => {
+        const normalizedStatus = step.status || step.Status || "pending";
+
+        const stepDiv = document.createElement("div");
+        stepDiv.className = `progress-step ${normalizedStatus}`;
+
+        const stepName = document.createElement("div");
+        stepName.className = "step-name";
+        stepName.textContent = formatStepName(step.name);
+
+        const stepStatus = document.createElement("div");
+        stepStatus.className = `step-status ${normalizedStatus}`;
+        stepStatus.textContent = normalizedStatus;
+
+        stepDiv.appendChild(stepName);
+        stepDiv.appendChild(stepStatus);
+        progressSteps.appendChild(stepDiv);
+    });
+}
+
+
+
+export function initDisplays() {
+    const chromaColorInput = document.getElementById("chromaColor");
+    if (chromaColorInput) {
+        chromaColorInput.addEventListener("input", (e) => {
+            document.getElementById("chromaColorValue").textContent = e.target.value.toUpperCase();
+        });
+    }
+
+    bindRangeDisplay("threshold", "thresholdValue");
+    bindRangeDisplay("similarity", "similarityValue");
+    bindRangeDisplay("fps", "fpsValue");
+}
+
+
+export function initUpload(setJobId) {
+    document.getElementById("upload").addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const result = await api.uploadFile(file);
+
+            setJobId(result.job_id);
+
+            const video = document.getElementById("preview");
+            video.src = result.preview;
+            video.load();
+
+            const generateBtn = document.getElementById("generate");
+            generateBtn.disabled = false;
+            generateBtn.textContent = "🚀 Generate Spritesheet";
+
+        } catch (error) {
+            console.error(error);
+        }
+    });
+}
+
+export function initGenerate(getJobId, connectStatusSocket) {
+    // Generate button handler
+
+
+    document.getElementById("generate").addEventListener("click", async () => {
+        let jobId = getJobId();
+        console.log("JobId", jobId);
+        if (!jobId) return;
+
+        const errorMsg = document.getElementById("errorMessage");
+        errorMsg.classList.remove("show");
+
+        const generateBtn = document.getElementById("generate");
+        generateBtn.disabled = true;
+
+
+        resetResultCards();
+
+        const progressSection = document.getElementById("progressSection");
+        progressSection.classList.add("active");
+
+        connectStatusSocket(jobId);
+
+        const payload = {
+            job_id: jobId,
+            threshold: parseFloat(document.getElementById("threshold").value),
+            similarity: parseFloat(document.getElementById("similarity").value),
+            tile: document.getElementById("tile").value,
+            chroma_color: document.getElementById("chromaColor").value,
+            fps: parseInt(document.getElementById("fps").value, 10)
+        };
+        await api.generate(payload);
+    });
+}
