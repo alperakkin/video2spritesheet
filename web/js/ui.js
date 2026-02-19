@@ -99,30 +99,47 @@ function formatStepName(name) {
         .join(" ");
 }
 
-export function updateProgress(status) {
-    const progressSteps = document.getElementById("progressSteps");
-    progressSteps.innerHTML = "";
 
+export function updateProgress(status) {
     if (!status.steps || status.steps.length === 0) return;
 
-    status.steps.forEach((step) => {
-        const normalizedStatus = step.status || step.Status || "pending";
+    const progressBar = document.getElementById("progressBar");
+    const progressPercent = document.getElementById("progressPercent");
+    const progressStatusText = document.getElementById("progressStatusText");
 
-        const stepDiv = document.createElement("div");
-        stepDiv.className = `progress-step ${normalizedStatus}`;
+    const totalSteps = status.steps.length;
 
-        const stepName = document.createElement("div");
-        stepName.className = "step-name";
-        stepName.textContent = formatStepName(step.name);
+    const completedSteps = status.steps.filter(step => {
+        const s = step.status || step.Status;
+        return s === "completed" || s === "done";
+    }).length;
 
-        const stepStatus = document.createElement("div");
-        stepStatus.className = `step-status ${normalizedStatus}`;
-        stepStatus.textContent = normalizedStatus;
-
-        stepDiv.appendChild(stepName);
-        stepDiv.appendChild(stepStatus);
-        progressSteps.appendChild(stepDiv);
+    const runningStep = status.steps.find(step => {
+        const s = step.status || step.Status;
+        return s === "running" || s === "processing";
     });
+
+    // % hesaplama
+    const percent = Math.round((completedSteps / totalSteps) * 100);
+
+    // Progress bar güncelle
+    progressBar.style.width = percent + "%";
+    progressPercent.textContent = percent + "%";
+
+    // Status yazısı
+    if (runningStep) {
+        progressStatusText.textContent =
+            "Processing: " + formatStepName(runningStep.name);
+    } else if (completedSteps === totalSteps) {
+        progressStatusText.textContent = "All steps completed 🎉";
+    } else {
+        progressStatusText.textContent = "Starting...";
+    }
+
+    if (completedSteps === totalSteps) {
+        document.getElementById("progressSection")
+            .classList.add("completed");
+    }
 }
 
 
@@ -184,6 +201,7 @@ export function initGenerate(getJobId, connectStatusSocket) {
         resetResultCards();
 
         const progressSection = document.getElementById("progressSection");
+        progressSection.classList.remove("hidden");
         progressSection.classList.add("active");
 
         connectStatusSocket(jobId);

@@ -66,10 +66,20 @@
         <button type="button" id="generate" class="btn" disabled>🚀 Generate Spritesheet</button>
       </form>
 
-      <div class="progress-section" id="progressSection">
-        <div class="progress-title">Processing Progress</div>
-        <div class="progress-steps" id="progressSteps"></div>
-      </div>
+      <div id="progressSection" class="progress-card hidden">
+        <div class="progress-header">
+            <span id="progressStatusText">Waiting...</span>
+        </div>
+
+        <div class="progress-bar-wrapper">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+
+        <div class="progress-percent">
+            <span id="progressPercent">0%</span>
+        </div>
+    </div>
+
 
       <div class="results">
         <div class="result-card">
