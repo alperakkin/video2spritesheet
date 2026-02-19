@@ -18,6 +18,7 @@ type ProcessRequest struct {
 	Tile        string  `json:"tile"`
 	ChromaColor string  `json:"chroma_color"`
 	FPS         int     `json:"fps"`
+	Size        int     `json:"size"`
 }
 
 func ProcessHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +52,7 @@ func ProcessHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Extract frames
 	job.UpdateStep("extract_frames", "running")
-	if err := ffmpeg.ExtractFrames(job.InputPath, framesDir, req.FPS); err != nil {
+	if err := ffmpeg.ExtractFrames(job.InputPath, framesDir, req.FPS, req.Size); err != nil {
 		log.Printf("Error extracting frames: %v", err)
 		job.UpdateStep("extract_frames", "error")
 		http.Error(w, "Failed to extract frames", http.StatusInternalServerError)

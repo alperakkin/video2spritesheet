@@ -1,6 +1,7 @@
 
 import API from "./api.js"
 import { SpritesheetSelectionEditor } from "./editor.js";
+let spritesheetEditor = null;
 
 const api = new API();
 
@@ -29,15 +30,17 @@ export function updateResults(status) {
     }
 
     if (status.outputs.spritesheet) {
-        const spritesheetEditor = new SpritesheetSelectionEditor({
-            section: document.getElementById("spritesheetEditorSection"),
-            canvas: document.getElementById("sheetEditorCanvas"),
-            spriteWidthInput: document.getElementById("spriteWidth"),
-            spriteHeightInput: document.getElementById("spriteHeight"),
-            resetButton: document.getElementById("resetEditor"),
-            removedCount: document.getElementById("removedCount"),
-            downloadLink: document.getElementById("sheetEditedDownload")
-        });
+        if (!spritesheetEditor) {
+            spritesheetEditor = new SpritesheetSelectionEditor({
+                section: document.getElementById("spritesheetEditorSection"),
+                canvas: document.getElementById("sheetEditorCanvas"),
+                spriteWidthInput: document.getElementById("spriteWidth"),
+                spriteHeightInput: document.getElementById("spriteHeight"),
+                resetButton: document.getElementById("resetEditor"),
+                selectedCount: document.getElementById("removedCount"),
+                downloadLink: document.getElementById("sheetEditedDownload")
+            });
+        }
         updateImageCard({
             imageEl: document.getElementById("sheet"),
             downloadEl: document.getElementById("sheetDownload"),
@@ -119,14 +122,14 @@ export function updateProgress(status) {
         return s === "running" || s === "processing";
     });
 
-    // % hesaplama
+
     const percent = Math.round((completedSteps / totalSteps) * 100);
 
-    // Progress bar güncelle
+
     progressBar.style.width = percent + "%";
     progressPercent.textContent = percent + "%";
 
-    // Status yazısı
+
     if (runningStep) {
         progressStatusText.textContent =
             "Processing: " + formatStepName(runningStep.name);
@@ -155,12 +158,14 @@ export function initDisplays() {
     bindRangeDisplay("threshold", "thresholdValue");
     bindRangeDisplay("similarity", "similarityValue");
     bindRangeDisplay("fps", "fpsValue");
+    bindRangeDisplay("size", "sizeValue");
 }
 
 
 export function initUpload(setJobId) {
     document.getElementById("upload").addEventListener("change", async (e) => {
         const file = e.target.files[0];
+        const infoBox = document.getElementById("videoInfo");
         if (!file) return;
 
         try {
@@ -175,6 +180,7 @@ export function initUpload(setJobId) {
             const generateBtn = document.getElementById("generate");
             generateBtn.disabled = false;
             generateBtn.textContent = "🚀 Generate Spritesheet";
+            showVideoInfo(file, infoBox);
 
         } catch (error) {
             console.error(error);
@@ -183,7 +189,7 @@ export function initUpload(setJobId) {
 }
 
 export function initGenerate(getJobId, connectStatusSocket) {
-    // Generate button handler
+
 
 
     document.getElementById("generate").addEventListener("click", async () => {
@@ -212,8 +218,27 @@ export function initGenerate(getJobId, connectStatusSocket) {
             similarity: parseFloat(document.getElementById("similarity").value),
             tile: document.getElementById("tile").value,
             chroma_color: document.getElementById("chromaColor").value,
-            fps: parseInt(document.getElementById("fps").value, 10)
+            fps: parseInt(document.getElementById("fps").value, 10),
+            size: parseInt(document.getElementById("size").value)
         };
         await api.generate(payload);
     });
 }
+export function showVideoInfo(file, infoElement) {
+    const video = document.createElement("video");
+    video.preload = "metadata";
+
+    video.onloadedmetadata = function () {
+        URL.revokeObjectURL(video.src);
+
+        const width = video.videoWidth;
+        const height = video.videoHeight;
+        const duration = video.duration.toFixed(2);
+
+        infoElement.textContent =
+            `Resolution: ${width}x${height} | Duration: ${duration}s`;
+    };
+
+    video.src = URL.createObjectURL(file);
+}
+

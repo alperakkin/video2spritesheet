@@ -44,6 +44,11 @@
             <label for="tile">Tile Layout (e.g., 8x8)</label>
             <input type="text" id="tile" value="8x8" placeholder="8x8">
           </div>
+          <div class="control-group">
+            <label for="size">Sprite Size (Px)</label>
+            <input type="range" id="size" min="0" max="1024" step="16" value="64">
+            <div class="value-display" id="sizeValue">64</div>
+          </div>
 
           <div class="control-group">
             <label for="fps">FPS</label>
@@ -85,6 +90,8 @@
         <div class="result-card">
           <h3>📹 Video Preview</h3>
           <video id="preview" width="100%" controls autoplay loop muted></video>
+          <div id="videoInfo"></div>
+
         </div>
 
         <div class="result-card">
@@ -104,7 +111,7 @@
 
       <section class="spritesheet-editor-section hidden component component--spritesheet-editor" id="spritesheetEditorSection" data-component="spritesheet-editor">
         <h3>🛠 Spritesheet Editor</h3>
-        <p class="editor-subtitle">Set sprite size and click tiles to remove frames.</p>
+        <p class="editor-subtitle">Set sprite size and click tiles to add frames.</p>
 
         <div class="editor-controls" data-layer="controls">
           <div class="control-group">
@@ -126,6 +133,8 @@
         <div class="editor-canvas-wrapper" data-layer="workspace">
           <canvas id="sheetEditorCanvas"></canvas>
         </div>
+        <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
+
 
         <div class="editor-actions" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;" data-layer="actions">
           <button type="button" id="resetEditor" class="btn" style="max-width: 220px;">Reset Selection</button>
