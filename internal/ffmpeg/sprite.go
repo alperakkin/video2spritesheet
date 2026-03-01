@@ -39,12 +39,14 @@ func MakeSpriteSheet(framesDir, output, tile string) error {
 	// Sort frame files to ensure correct order
 	sort.Strings(frameFiles)
 
-	// Use a simpler approach: use pattern_type glob with tile filter
-	// This is more efficient and handles many frames better
+	// Make sure we have enough frames for the tile
+	// But FFmpeg will just tile as many as it can if there are fewer
+
+	// We use the image sequence pattern instead of glob to ensure compatibility
+	// across all operating systems and FFmpeg builds
 	args := []string{
 		"-y",
-		"-pattern_type", "glob",
-		"-i", filepath.Join(framesDir, "frame_*.png"),
+		"-i", filepath.Join(framesDir, "frame_%04d.png"),
 		"-filter_complex", fmt.Sprintf("tile=%s", tile),
 		"-frames:v", "1",
 		output,

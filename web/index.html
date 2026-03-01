@@ -113,32 +113,61 @@
         <h3>🛠 Spritesheet Editor</h3>
         <p class="editor-subtitle">Set sprite size and click tiles to add frames.</p>
 
-        <div class="editor-controls" data-layer="controls">
-          <div class="control-group">
-            <label for="spriteWidth">Sprite Width (px)</label>
-            <input type="number" id="spriteWidth" value="64" min="1">
+        <div class="editor-layout">
+          <div class="editor-main">
+            <div class="editor-controls" data-layer="controls">
+              <div class="control-group">
+                <label for="spriteWidth">Sprite Width (px)</label>
+                <input type="number" id="spriteWidth" value="64" min="1">
+              </div>
+
+              <div class="control-group">
+                <label for="spriteHeight">Sprite Height (px)</label>
+                <input type="number" id="spriteHeight" value="64" min="1">
+              </div>
+
+              <div class="control-group">
+                <label>Selection</label>
+                <div class="value-display" id="removedCount">Removed: 0</div>
+              </div>
+            </div>
+
+            <div class="editor-canvas-wrapper" data-layer="workspace">
+              <canvas id="sheetEditorCanvas"></canvas>
+            </div>
+            <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
+
+
+            <div class="editor-actions" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;" data-layer="actions">
+              <button type="button" id="selectAll" class="btn" style="flex: 1; min-width: 100px; padding: 10px;">Select All</button>
+              <button type="button" id="invertSelection" class="btn" style="flex: 1; min-width: 100px; padding: 10px;">Invert</button>
+              <button type="button" id="resetEditor" class="btn" style="flex: 1; min-width: 100px; padding: 10px; background: #6c757d;">Clear</button>
+              <a id="sheetEditedDownload" class="download-btn hidden" download="spritesheet-edited.png" style="width: 100%; text-align: center;">⬇️ Download Edited Spritesheet</a>
+            </div>
           </div>
-
-          <div class="control-group">
-            <label for="spriteHeight">Sprite Height (px)</label>
-            <input type="number" id="spriteHeight" value="64" min="1">
+          
+          <div class="editor-preview">
+            <div class="preview-header">
+              <h4>Live Preview</h4>
+            </div>
+            <div class="preview-canvas-wrapper">
+              <canvas id="previewCanvas" width="128" height="128"></canvas>
+            </div>
+            <div class="preview-controls">
+                <button type="button" id="playPausePreview" class="btn play-pause-btn" style="padding: 10px; flex: 0 0 auto; margin-top: 0; min-width: 100px;">⏸️ Pause</button>
+                <div class="control-group" style="flex: 1; padding: 10px; margin-bottom: 0;">
+                  <label for="previewFps" style="margin-bottom: 5px;">Preview FPS</label>
+                  <input type="range" id="previewFps" min="1" max="60" step="1" value="12">
+                  <div class="value-display" id="previewFpsValue" style="text-align: right;">12</div>
+                </div>
+                <div class="control-group" style="flex: 0 0 auto; padding: 10px; margin-bottom: 0;">
+                   <label for="previewBgColor" class="color-picker-label-text" style="font-size: 0.8em; margin-bottom: 5px; display: block;">Bg Color</label>
+                   <div class="color-picker-wrapper" style="margin-top: 0;">
+                     <input type="color" id="previewBgColor" class="color-picker-input" style="width: 40px; height: 30px;" value="#ffffff">
+                   </div>
+                </div>
+            </div>
           </div>
-
-          <div class="control-group">
-            <label>Selection</label>
-            <div class="value-display" id="removedCount">Removed: 0</div>
-          </div>
-        </div>
-
-        <div class="editor-canvas-wrapper" data-layer="workspace">
-          <canvas id="sheetEditorCanvas"></canvas>
-        </div>
-        <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
-
-
-        <div class="editor-actions" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;" data-layer="actions">
-          <button type="button" id="resetEditor" class="btn" style="max-width: 220px;">Reset Selection</button>
-          <a id="sheetEditedDownload" class="download-btn hidden" download="spritesheet-edited.png">⬇️ Download Edited Spritesheet</a>
         </div>
       </section>
     </div>

@@ -1,2 +1,5 @@
 # Byte-compiled / optimized / DLL files
 outputs
+server.exe
+ffmpeg.exe
+ffprobe.exe

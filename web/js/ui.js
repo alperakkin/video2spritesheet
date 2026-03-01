@@ -38,7 +38,13 @@ export function updateResults(status) {
                 spriteHeightInput: document.getElementById("spriteHeight"),
                 resetButton: document.getElementById("resetEditor"),
                 selectedCount: document.getElementById("removedCount"),
-                downloadLink: document.getElementById("sheetEditedDownload")
+                downloadLink: document.getElementById("sheetEditedDownload"),
+                selectAllButton: document.getElementById("selectAll"),
+                invertSelectionButton: document.getElementById("invertSelection"),
+                previewCanvas: document.getElementById("previewCanvas"),
+                previewFpsInput: document.getElementById("previewFps"),
+                previewBgColorInput: document.getElementById("previewBgColor"),
+                playPausePreviewButton: document.getElementById("playPausePreview")
             });
         }
         updateImageCard({
@@ -159,6 +165,7 @@ export function initDisplays() {
     bindRangeDisplay("similarity", "similarityValue");
     bindRangeDisplay("fps", "fpsValue");
     bindRangeDisplay("size", "sizeValue");
+    bindRangeDisplay("previewFps", "previewFpsValue");
 }
 
 

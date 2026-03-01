@@ -7,8 +7,22 @@ export class SpritesheetSelectionEditor {
         this.resetButton = elements.resetButton;
         this.selectedCount = elements.selectedCount;
         this.downloadLink = elements.downloadLink;
+
+        this.selectAllButton = elements.selectAllButton;
+        this.invertSelectionButton = elements.invertSelectionButton;
+        this.previewCanvas = elements.previewCanvas;
+        this.previewFpsInput = elements.previewFpsInput;
+        this.previewBgColorInput = elements.previewBgColorInput;
+        this.playPausePreviewButton = elements.playPausePreviewButton;
+
         this._hoverFrameRequest = null;
 
+        this._previewFrameRequest = null;
+        this.previewState = {
+            isPlaying: true,
+            currentFrameIndex: 0,
+            lastFrameTime: 0
+        };
 
         this.state = {
             image: null,
@@ -36,6 +50,15 @@ export class SpritesheetSelectionEditor {
 
         if (this.resetButton)
             this.resetButton.addEventListener("click", () => this.resetSelection());
+
+        if (this.selectAllButton)
+            this.selectAllButton.addEventListener("click", () => this.selectAll());
+
+        if (this.invertSelectionButton)
+            this.invertSelectionButton.addEventListener("click", () => this.invertSelection());
+
+        if (this.playPausePreviewButton)
+            this.playPausePreviewButton.addEventListener("click", () => this.togglePreviewPlay());
 
         if (this.canvas) {
             this.canvas.addEventListener("click", (e) => this.onClick(e));
@@ -97,6 +120,7 @@ export class SpritesheetSelectionEditor {
             this.baseCanvas.getContext("2d").drawImage(img, 0, 0);
 
             this.draw();
+            this.startPreviewLoop();
         };
 
         img.src = sheetUrl;
@@ -243,7 +267,120 @@ export class SpritesheetSelectionEditor {
 
     resetSelection() {
         this.state.selected.clear();
-        this.draw();
+        this.afterSelectionUpdated();
+    }
+
+    selectAll() {
+        if (!this.state.image) return;
+        const maxIndex = this.state.cols * this.state.rows;
+        const newSelected = new Set();
+        for (let i = 0; i < maxIndex; i++) {
+            newSelected.add(i);
+        }
+        this.state.selected = newSelected;
+        this.afterSelectionUpdated();
+    }
+
+    invertSelection() {
+        if (!this.state.image) return;
+        const maxIndex = this.state.cols * this.state.rows;
+        const newSelected = new Set();
+        for (let i = 0; i < maxIndex; i++) {
+            if (!this.state.selected.has(i)) {
+                newSelected.add(i);
+            }
+        }
+        this.state.selected = newSelected;
+        this.afterSelectionUpdated();
+    }
+
+    togglePreviewPlay() {
+        this.previewState.isPlaying = !this.previewState.isPlaying;
+        if (this.playPausePreviewButton) {
+            this.playPausePreviewButton.innerHTML = this.previewState.isPlaying ? "⏸️ Pause" : "▶️ Play";
+        }
+        if (this.previewState.isPlaying) {
+            this.previewState.lastFrameTime = performance.now();
+            this.startPreviewLoop();
+        } else {
+            this.stopPreviewLoop();
+        }
+    }
+
+    startPreviewLoop() {
+        if (this._previewFrameRequest) return;
+        if (!this.previewCanvas) return;
+        this.previewState.lastFrameTime = performance.now();
+        const loop = (time) => {
+            if (!this.previewState.isPlaying) return;
+
+            const fps = parseInt(this.previewFpsInput?.value, 10) || 12;
+            const frameDuration = 1000 / fps;
+
+            if (time - this.previewState.lastFrameTime >= frameDuration) {
+                this.previewState.lastFrameTime = time;
+                this.drawPreviewFrame();
+            }
+
+            this._previewFrameRequest = requestAnimationFrame(loop);
+        };
+        this._previewFrameRequest = requestAnimationFrame(loop);
+    }
+
+    stopPreviewLoop() {
+        if (this._previewFrameRequest) {
+            cancelAnimationFrame(this._previewFrameRequest);
+            this._previewFrameRequest = null;
+        }
+    }
+
+    drawPreviewFrame() {
+        if (!this.previewCanvas || !this.state.image) return;
+        const ctx = this.previewCanvas.getContext("2d");
+
+        const bgColor = this.previewBgColorInput?.value || "#ffffff";
+
+        if (this.state.selected.size === 0) {
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+            return;
+        }
+
+        const selectedArray = [...this.state.selected].sort((a, b) => a - b);
+
+        if (this.previewState.currentFrameIndex >= selectedArray.length) {
+            this.previewState.currentFrameIndex = 0;
+        }
+
+        const idx = selectedArray[this.previewState.currentFrameIndex];
+        const col = idx % this.state.cols;
+        const row = Math.floor(idx / this.state.cols);
+
+        const { spriteWidth, spriteHeight } = this.state;
+
+        if (this.previewCanvas.width !== spriteWidth || this.previewCanvas.height !== spriteHeight) {
+            this.previewCanvas.width = spriteWidth;
+            this.previewCanvas.height = spriteHeight;
+        }
+
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+
+        ctx.drawImage(
+            this.state.image,
+            col * spriteWidth,
+            row * spriteHeight,
+            spriteWidth,
+            spriteHeight,
+            0,
+            0,
+            spriteWidth,
+            spriteHeight
+        );
+
+        if (this.previewState.isPlaying) {
+            this.previewState.currentFrameIndex = (this.previewState.currentFrameIndex + 1) % selectedArray.length;
+        }
     }
 
     export() {
@@ -275,6 +412,13 @@ export class SpritesheetSelectionEditor {
     afterSelectionUpdated() {
         this.draw();
 
+        this.previewState.currentFrameIndex = 0;
+        if (!this._previewFrameRequest && this.previewState.isPlaying) {
+            this.startPreviewLoop();
+        } else if (!this.previewState.isPlaying) {
+            this.drawPreviewFrame();
+        }
+
         const newSheet = this.generateNewSheet();
         if (newSheet) {
             const previewUrl = newSheet.toDataURL("image/png");
@@ -290,10 +434,19 @@ export class SpritesheetSelectionEditor {
             if (placeholder) {
                 placeholder.style.display = "none";
             }
+            if (this.downloadLink) {
+                this.downloadLink.classList.remove("hidden");
+            }
+        } else {
+            const sheetImg = document.getElementById("sheet");
+            const placeholder = document.getElementById("sheetPlaceholder");
+            if (sheetImg) sheetImg.classList.add("hidden");
+            if (placeholder) {
+                placeholder.style.display = "block";
+                placeholder.textContent = "Please select at least one frame.";
+            }
+            if (this.downloadLink) this.downloadLink.classList.add("hidden");
         }
-
-        if (this.downloadLink)
-            this.downloadLink.classList.remove("hidden");
     }
 
 
